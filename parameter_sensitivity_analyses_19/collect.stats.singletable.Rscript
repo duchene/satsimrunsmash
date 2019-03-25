@@ -1,0 +1,61 @@
+
+require(phangorn)
+load("../../simScenarios.Rdata")
+
+load("results.9.Rdata")
+allres <- res
+load("results.8.Rdata")
+allres[1261:1440] <- res[1261:1440]
+load("results.7.Rdata")
+allres[1081:1260] <- res[1081:1260]
+load("results.6.Rdata")
+allres[901:1080] <- res[901:1080]
+load("results.5.Rdata")
+allres[721:900] <- res[721:900]
+load("results.4.Rdata")
+allres[541:720] <- res[541:720]
+load("results.3.Rdata")
+allres[361:540] <- res[361:540]
+load("results.2.Rdata")
+allres[181:360] <- res[181:360]
+load("results.1.Rdata")
+allres[1:180] <- res[1:180]
+
+print("raw data have been read")
+
+for(i in 1:length(allres)) for(j in 1:100) names(allres[[i]])[j] <- paste(scenarios[i,], collapse = "/")
+res <- unlist(allres, recursive = F)
+
+stats <- list()
+      
+for(j in 1:length(res)){
+	    stats[[length(stats) + 1]] <- vector()
+      	    if(class(res[[j]]) == "try-error"){
+	    	stats[[length(stats)]] <- rep(NA, 16)
+		next
+	    }
+	    stats[[length(stats)]]["estEntr"] <- if(is.null(res[[j]]$estEntr)) NA else res[[j]]$estEntr
+	    stats[[length(stats)]]["expEntr"] <- if(is.null(res[[j]]$expEntr)) NA else res[[j]]$expEntr
+	    stats[[length(stats)]]["tEntr"] <- if(is.null(res[[j]]$tEntr)) NA else res[[j]]$tEntr
+	    stats[[length(stats)]]["cit"] <- if(is.null(res[[j]]$cit)) NA else res[[j]]$cit
+	    stats[[length(stats)]]["cip"] <- if(is.null(res[[j]]$cip)) NA else res[[j]]$cip
+	    stats[[length(stats)]]["tCompress"] <- if(is.null(res[[j]]$tCompress)) NA else res[[j]]$tCompress
+	    stats[[length(stats)]]["pCompress"] <- if(is.null(res[[j]]$pCompress)) NA else res[[j]]$pCompress
+	    stats[[length(stats)]]["topdist"] <- if(length(res[[j]]$tree) < 5) NA else RF.dist(res[[j]]$tree, res[[j]]$trueTree, normalize = T) 
+	    stats[[length(stats)]]["tldist"] <- if(length(res[[j]]$tree) < 5) NA else sum(res[[j]]$tree$edge.length) / sum(res[[j]]$trueTree$edge.length)
+	    scenj <- strsplit(names(res)[j], split = "[/]")[[1]]
+	    names(scenj) <- c("ntaxa", "seqlen", "imbal", "trlen", "randsites", "modelsim", "stemminess")
+	    stats[[length(stats)]] <- c(stats[[length(stats)]], scenj)
+}
+
+# Create matrix with all the summary data.
+
+alldat <- matrix(unlist(stats), ncol = length(stats[[1]]), byrow = T)
+colnames(alldat) <- names(stats[[1]])
+alldat <- as.data.frame(alldat)
+for(i in 1:9) alldat[,i] <- as.numeric(as.character(alldat[,i]))
+
+# The follwing creates a dataset that excludes the random sites scenarios.
+datcut <- alldat[which(alldat$randsites != "0.8" & alldat$randsites != "0.4"),]
+
+save(alldat, datcut, file = "summary_stats_0319.Rdata")

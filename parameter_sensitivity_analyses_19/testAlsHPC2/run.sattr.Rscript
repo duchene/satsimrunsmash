@@ -1,0 +1,21 @@
+library(phangorn)
+
+curdir <- getwd()
+setwd("..")
+source("runPhyML.R")
+source("satsim.R")
+load("trees.Rdata")
+load("simScenarios.Rdata")
+setwd(curdir)
+
+res <- list()
+
+for(i in 1:180){
+       res[[i]] <- list()
+
+       for(j in 1:100){
+       	     res[[i]][[j]] <- satsim(ntaxa = as.numeric(scenarios[i,1]), imbal = as.numeric(scenarios[i,3]), trlen = as.numeric(scenarios[i,4]), stemminess = as.numeric(scenarios[i,7]), seqlen = as.numeric(scenarios[i,2]), proprandsites = as.numeric(scenarios[i,5]), modelsim = scenarios[i,6], modelest = "JC")
+       	     
+       	     save(res, file = "results3_0404.Rdata")
+       }
+}

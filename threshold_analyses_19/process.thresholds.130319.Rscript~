@@ -1,0 +1,70 @@
+library(phangorn)
+load("thres0319/summary_stats_0319.Rdata")
+source("../generate.roc.R")
+
+# Create vectors of 'positives', which are cases where the true topology or branch lengths were not recovered.
+
+alldat$topopos <- alldat$topdist
+alldat$topopos[which(alldat$topopos > 0)] <- 1
+alldat$tlpos1 <- alldat$tldist
+alldat$tlpos1[which(alldat$tlpos1 >= 1)] <- 1
+alldat$tlpos1[which(alldat$tlpos1 < 1)] <- 0
+
+alldat$cit <- alldat$cit * -1
+alldat$tCompress <- alldat$tCompress * -1
+
+# Generate roc curve data for each test statstic, focusing on model-matched simulations, and those without extremely short branch lengths
+
+datjc <- alldat[alldat$modelsim == "JC" & alldat$trlen >= 0.01,]
+datgtr <- alldat[alldat$modelsim == "GTR+G" & alldat$trlen >= 0.01,]
+
+thresmat <- matrix(NA, 16, 11)
+colnames(thresmat) <- c("seqlen", "ntax", "entth", "cith", "compth", "tprent", "tprci", "tprcomp", "fprent", "fprci", "fprcomp")
+
+# the following proposed sequence lengths might be a range of 200 with the value below as midpoint
+thresmat[,1] <- c(400, 800, 1200, 1600)
+thresmat[,2] <- c(rep(8, 4), rep(16, 4), rep(32, 4), rep(64, 4))
+
+for(i in 1:16){
+      thresmat[i,c(3:11)] <- unlist(general.roc.plotting("topopos", c("tEntr", "cit", "tCompress"), datjc[datjc$ntaxa == thresmat[i,2] & datjc$seqlen >= (thresmat[i,1]-200) & datjc$seqlen <= (thresmat[i,1]+200),])[3:5])
+}
+
+thresmat <- as.data.frame(thresmat)
+
+# the following makes a thresmat for extreme branch lengths as a "positive"
+
+thresmatbl <- matrix(NA, 16, 11)
+colnames(thresmatbl) <- c("seqlen", "ntax", "entth", "cith", "compth", "tprent", "tprci", "tprcomp", "fprent", "fprci", "fprcomp")
+thresmatbl[,1] <- c(400, 800, 1200, 1600)
+thresmatbl[,2] <- c(rep(8, 4), rep(16, 4), rep(32, 4), rep(64, 4))
+for(i in 1:16){
+      thresmatbl[i,c(3:11)] <- unlist(general.roc.plotting("tlpos1", c("tEntr", "cit", "tCompress"), datjc[datjc$ntaxa == thresmatbl[i,2] & datjc$seqlen >= (thresmatbl[i,1]-200) & datjc$seqlen <= (thresmatbl[i,1]+200),])[3:5])
+}
+
+thentlin <- lm(entth ~ seqlen + ntax, data = thresmat)
+tprentlin <- lm(tprent ~ seqlen + ntax, data = thresmat)
+fprentlin <- lm(fprent ~ seqlen + ntax, data = thresmat)
+thentsqrt <- lm(entth ~ I(seqlen^0.5) + I(ntax^0.5), data = thresmat)
+tprentsqrt <- lm(tprent ~ I(seqlen^0.5) + I(ntax^0.5), data = thresmat)
+fprentsqrt <- lm(fprent ~ I(seqlen^0.5) + I(ntax^0.5), data = thresmat)
+
+thcilin <- lm(cith ~ seqlen + ntax, data = thresmat)
+tprcilin <- lm(tprci ~ seqlen + ntax, data = thresmat)
+fprcilin <- lm(fprci ~ seqlen + ntax, data = thresmat)
+thcisqrt <- lm(cith ~ I(seqlen^0.5) + I(ntax^0.5), data = thresmat)
+tprcisqrt <- lm(tprci ~ I(seqlen^0.5) + I(ntax^0.5), data = thresmat)
+fprcisqrt <- lm(fprci ~ I(seqlen^0.5) + I(ntax^0.5), data = thresmat)
+
+thcomlin <- lm(compth ~ seqlen + ntax, data = thresmat)
+tprcomlin <- lm(tprcomp ~ seqlen + ntax, data = thresmat)
+fprcomlin <- lm(fprcomp ~ seqlen + ntax, data = thresmat)
+thcomsqrt <- lm(compth ~ I(seqlen^0.5) + I(ntax^0.5), data = thresmat)
+tprcomsqrt <- lm(tprcomp ~ I(seqlen^0.5) + I(ntax^0.5), data = thresmat)
+fprcomsqrt <- lm(fprcomp ~ I(seqlen^0.5) + I(ntax^0.5), data = thresmat)
+
+getSatThreshold <- function(seqlen, ntax, fun){
+        resthres <- predict(fun, newdata = data.frame(seqlen = seqlen, ntax = ntax))
+        return(resthres)
+}
+
+save(thentlin, tprentlin, fprentlin, thentsqrt, tprentsqrt, fprentsqrt, thcilin, tprcilin, fprcilin, thcisqrt, tprcisqrt, fprcisqrt, thcomlin, tprcomlin, fprcomlin, thcomsqrt, tprcomsqrt, fprcomsqrt, file = "threshold.functions.0319.Rdata")

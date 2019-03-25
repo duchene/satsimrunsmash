@@ -1,0 +1,126 @@
+library(phangorn)
+load("summary_matrices_0618.Rdata")
+source("generate.roc.R")
+
+pdf("~/Dropbox/Research/saturation/rocs.pdf", width = 12, height = 12)
+
+#### Some roc curves with true positives being cases where the true tree is not recovered.
+
+par(mfrow = c(3, 3))
+
+# Extract ROC data for every scenario individually. THIS SECTION IS NOT CURRENTLY WORKING because within each scenario there is not enough variation in the performance of the model to allow for ROC curve analysis
+
+#thdat <- matrix(NA, 1620, 3)
+#rownames(thdat) <- colnames(dat$phmatord)
+#dat <- lapply(dats, abs)
+#dat$phmatord[which(dat$phmatord > 0)] <- 1
+#diagnos <- vector()
+#for(i in 1:1620){
+#      if(all(dat$phmatord[-which(is.na(dat$phmatord[,i])),i] == 0)) diagnos[i] <- 0 else if(dat$phmatord[-which(is.na(dat$phmatord[,i])),i] == 1) diagnos[i] <- 1
+#      next
+#      rocent <- generate.roc(dat$phmatord[,i][which(!is.na(dat$tentmatord[,i]))], dat$tentmatord[,i][which(!is.na(dat$tentmatord[,i]))])
+#      rocci <- generate.roc(dat$phmatord[,i][which(!is.na(dat$tcimatord[,i]))], dat$tcimatord[,i][which(!is.na(dat$tcimatord[,i]))])
+#      roccom <- generate.roc(dat$phmatord[,i][which(!is.na(dat$tcommatord[,i]))], dat$tcommatord[,i][which(!is.na(dat$tcommatord[,i]))])
+#      rocent <- cbind(rocent, rocent[,2] - rocent[,1])
+#      rocci <- cbind(rocci, rocci[,2] - rocci[,1])
+#      roccom <- cbind(roccom, roccom[,2] - roccom[,1])
+#      thdat[i,1] <- as.numeric(rownames(rocent)[which(rocent[,3] == max(rocent[,3]))[1]])
+#      thdat[i,2] <- as.numeric(rownames(rocci)[which(rocci[,3] == max(rocci[,3]))[1]])
+#      thdat[i,3] <- as.numeric(rownames(roccom)[which(roccom[,3] == max(roccom[,3]))[1]])
+#}
+
+
+
+
+# Make TAILORED ROC plots for ph distance
+
+thrmat <- matrix(NA, 45, 18)
+colnames(thrmat) <- c("seqlen", "ntax", "entth", "cith", "comth", "q0.05ent", "meanent", "q0.95ent", "q0.05ci", "meanci", "q0.95ci", "q0.05com", "meancom", "q0.95com", "qentth", "qcith", "qcomth", "scheme")
+thrmat[,1] <- c(500, 500, 500, 1500, 1500, 1500, 2500, 2500, 2500)
+thrmat[,2] <- c(16, 32, 64)
+thrmat[,18] <- rep(1:5, each = 9)
+
+for(i in 1:45){
+      dat <- lapply(subdats[[i]], function(x) as.numeric(x))
+      dat$phmatord[which(dat$phmatord > 0)] <- 1
+      dat$tcimatord <- dat$tcimatord * -1
+      dat$tcommatord <- dat$tcommatord * -1
+      rocent <- generate.roc(dat$phmatord[which(!is.na(dat$tentmatord))], dat$tentmatord[which(!is.na(dat$tentmatord))])
+      rocci <- generate.roc(dat$phmatord[which(!is.na(dat$tcimatord))], dat$tcimatord[which(!is.na(dat$tcimatord))])
+      roccom <- generate.roc(dat$phmatord[which(!is.na(dat$tcommatord))], dat$tcommatord[which(!is.na(dat$tcommatord))])
+      try(plot(rocent, type = "l", lwd = 2, main = names(subdats)[i]))
+      lines(rocci, col = "blue", lwd = 2)
+      lines(roccom, col = "red", lwd = 2)
+      abline(0,1)
+      
+      rocent <- cbind(rocent, rocent[,2] - rocent[,1])
+      rocci <- cbind(rocci, rocci[,2] - rocci[,1])
+      roccom <- cbind(roccom, roccom[,2] - roccom[,1])
+
+      thrmat[i,3] <- as.numeric(rownames(rocent)[which(rocent[,3] == max(rocent[,3]))[1]])
+      thrmat[i,4] <- as.numeric(rownames(rocci)[which(rocci[,3] == max(rocci[,3]))[1]])
+      thrmat[i,5] <- as.numeric(rownames(roccom)[which(roccom[,3] == max(roccom[,3]))[1]])
+      thrmat[i,c(6,8,7)] <- c(quantile(as.numeric(rownames(rocent)), probs = c(0.05, 0.95)), mean(as.numeric(rownames(rocent)), na.rm = T))
+      thrmat[i,c(9,11,10)] <- c(quantile(as.numeric(rownames(rocci)), probs = c(0.05, 0.95)), mean(as.numeric(rownames(rocci)), na.rm = T))
+      thrmat[i,c(12,14,13)] <- c(quantile(as.numeric(rownames(roccom)), probs = c(0.05, 0.95)), mean(as.numeric(rownames(roccom)), na.rm = T))
+      thrmat[i, 15] <- pnorm(thrmat[i, 3], thrmat[i, 7], sd(as.numeric(rownames(rocent)), na.rm = T))
+      thrmat[i, 16] <- pnorm(thrmat[i, 4], thrmat[i, 10], sd(as.numeric(rownames(rocci)), na.rm = T))
+      thrmat[i, 17] <- pnorm(thrmat[i, 5], thrmat[i, 13], sd(as.numeric(rownames(roccom)), na.rm = T))
+
+      abline(v = rocent[which(rocent[,3] == max(rocent[,3]))[1],1], lty = 2)
+      abline(v = rocci[which(rocci[,3] == max(rocci[,3]))[1],1], lty = 2, col = "blue")
+      abline(v = roccom[which(roccom[,3] == max(roccom[,3]))[1],1], lty = 2, col = "red")
+      legend(x = "bottomright", legend = c("Best TPR-FPR, thresh, th.q", paste(round(rocent[which(rocent[,3] == max(rocent[,3]))[1],3], 2), round(as.numeric(rownames(rocent)[which(rocent[,3] == max(rocent[,3]))[1]]), 2), round(thrmat[i, 15], 2), sep = ", "), paste(round(rocci[which(rocci[,3] == max(rocci[,3]))[1],3], 2), round(as.numeric(rownames(rocci)[which(rocci[,3] == max(rocci[,3]))[1]]), 2), round(thrmat[i, 16], 2), sep = ", "), paste(round(roccom[which(roccom[,3] == max(roccom[,3]))[1],3], 2), round(as.numeric(rownames(roccom)[which(roccom[,3] == max(roccom[,3]))[1]]), 2), round(thrmat[i, 17], 2), sep = ", ")), col = c("white", "black", "blue", "red"), lty = 2)
+}
+
+thrmattopo <- thrmat
+
+# Make ROC plots for tree length distance
+
+for(i in 1:45){
+      dat <- lapply(subdats[[i]], function(x) as.numeric(x))
+      dat$tlmatord[which(dat$tlmatord < 0.05 & dat$tlmatord > -0.05)] <- 0
+      dat$tlmatord[which(dat$tlmatord != 0)] <- 1
+      dat$tcimatord <- dat$tcimatord * -1
+      dat$tcommatord <- dat$tcommatord * -1
+      rocent <- generate.roc(dat$tlmatord[which(!is.na(dat$tentmatord))], dat$tentmatord[which(!is.na(dat$tentmatord))])
+      rocci <- generate.roc(dat$tlmatord[which(!is.na(dat$tcimatord))], dat$tcimatord[which(!is.na(dat$tcimatord))])
+      roccom <- generate.roc(dat$tlmatord[which(!is.na(dat$tcommatord))], dat$tcommatord[which(!is.na(dat$tcommatord))])
+      try(plot(rocent, type = "l", lwd = 2, main = names(subdats)[i]))
+      lines(rocci, col = "blue", lwd = 2)
+      lines(roccom, col = "red", lwd = 2)
+      abline(0,1)
+      
+      rocent <- cbind(rocent, rocent[,2] - rocent[,1])
+      rocci <- cbind(rocci, rocci[,2] - rocci[,1])
+      roccom <- cbind(roccom, roccom[,2] - roccom[,1])
+      
+      thrmat[i,3] <- as.numeric(rownames(rocent)[which(rocent[,3] == max(rocent[,3]))[1]])
+      thrmat[i,4] <- as.numeric(rownames(rocci)[which(rocci[,3] == max(rocci[,3]))[1]])
+      thrmat[i,5] <- as.numeric(rownames(roccom)[which(roccom[,3] == max(roccom[,3]))[1]])
+      thrmat[i,c(6,8,7)] <- c(quantile(as.numeric(rownames(rocent)), probs = c(0.05, 0.95)), mean(as.numeric(rownames(rocent)), na.rm = T))
+      thrmat[i,c(9,11,10)] <- c(quantile(as.numeric(rownames(rocci)), probs = c(0.05, 0.95)), mean(as.numeric(rownames(rocci)), na.rm = T))
+      thrmat[i,c(12,14,13)] <- c(quantile(as.numeric(rownames(roccom)), probs = c(0.05, 0.95)), mean(as.numeric(rownames(roccom)), na.rm = T))
+      thrmat[i, 15] <- pnorm(thrmat[i, 3], thrmat[i, 7], sd(as.numeric(rownames(rocent)), na.rm = T))
+      thrmat[i, 16] <- pnorm(thrmat[i, 4], thrmat[i, 10], sd(as.numeric(rownames(rocci)), na.rm = T))
+      thrmat[i, 17] <- pnorm(thrmat[i, 5], thrmat[i, 13], sd(as.numeric(rownames(roccom)), na.rm = T))
+
+      abline(v = rocent[which(rocent[,3] == max(rocent[,3]))[1],1], lty = 2)
+      abline(v = rocci[which(rocci[,3] == max(rocci[,3]))[1],1], lty = 2, col = "blue")
+      abline(v = roccom[which(roccom[,3] == max(roccom[,3]))[1],1], lty = 2, col = "red")
+      legend(x = "bottomright", legend = c("Best TPR-FPR, thresh, th.q", paste(round(rocent[which(rocent[,3] == max(rocent[,3]))[1],3], 2), round(as.numeric(rownames(rocent)[which(rocent[,3] == max(rocent[,3]))[1]]), 2), round(thrmat[i, 15], 2), sep = ", "), paste(round(rocci[which(rocci[,3] == max(rocci[,3]))[1],3], 2), round(as.numeric(rownames(rocci)[which(rocci[,3] == max(rocci[,3]))[1]]), 2), round(thrmat[i, 16], 2), sep = ", "), paste(round(roccom[which(roccom[,3] == max(roccom[,3]))[1],3], 2), round(as.numeric(rownames(roccom)[which(roccom[,3] == max(roccom[,3]))[1]]), 2), round(thrmat[i, 17], 2), sep = ", ")), col = c("white", "black", "blue", "red"), lty = 2)
+}
+
+thrmattl <- thrmat
+
+save(thrmattopo, thrmattl, file = "thres.mats.0618.Rdata")
+
+dev.off()
+
+# After finding that a threshold at the 0.05 quantile is reasonable, the matrices can be picked to create one synthesising the thresholds
+
+allthresmat <- cbind(thrmattopo[1:9, c(1, 2, 3, 4, 12)], thrmattl[1:9, 3:5])
+colnames(allthresmat) <- c("seqlen", "ntax", "qtop0.05ent", "qtop0.05ci", "qtop0.05com", "qtl0.05ent", "qtl0.05ci", "qtl0.05com")
+
+save(thrmattopo, thrmattl, allthresmat, file = "thres.mats.0618.Rdata")
+

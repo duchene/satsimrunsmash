@@ -1,0 +1,166 @@
+---
+title: "Compression Saturation Index"
+author: "Nik"
+date: "04/04/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Method Explanation
+
+In the following we develop an algorithm for measuring information content in a dataset by looking at how compressible the data is.
+
+In the following let $A$ be an alignment of $n$ sites and $k$ taxa. In particular let $A_i$ denote the $ith$ site in $A$: $A_i$ is a random k-vector of nucleotide bases (e.g. [a, a, c, t, g, ..., a] ), and we assume that the $A_i$ are i.i.d. Our goal is to figure out whether the random process that generated each $A_i$ is a saturated evolutionary process. Any particular element of this vector we will refer to as a taxon-site, to emphasise that it belongs to one taxon and one site.
+
+The philosophy of this method is that an informative alignment has a tree topology that allows us to summarise $A$ more effectively. If two taxa are closely related, then we can predict a large number of the bases owned by one taxon by the base owned by its sister at the same site. This reduces the amount of data we need to write out the alignment, without any loss of data.
+
+Consider for example, an alignment of two taxa at 8 sites:
+
+Taxon_1: a c t g a c t g
+Taxon_2: a t t g a c t g
+
+or equivalently the 8 tuples:
+
+(a, a), (c,t), (t,t) (g,g). (a,a), (c,c), (t,t), (g,g)
+
+They differ only at the second site, so we could write this as
+
+2a (c,t) 2t 2a 2c 2t 2g.
+
+In this case, we've gone from needing 16 pieces of information (all the individual letters) to write out the alignment, to 8 pieces of information (6 values that encode shared bases, and the letters in the tuple where they differ). 
+
+Formally, for a given site $A_i$, let $R(A_i)$ be the length of the encoding, that is, the minimum number of bits of information necessary to convey the information at that site by the method given above. In the above example $R(A_i) = 8 $, so it's the number of letters you have to write out, ignoring the numbers next to the letters.
+
+A topology groups taxa together by their relatedness - that is, it imposes an ordering that makes it more likely that we can summarise data effectively in this way. (Proof required??)
+
+Now, in a saturated alignment, the probability that a taxon-site takes a given value depends only on the overall probability of transitioning to that site. That is, it is independent of the values taken at that site by all other taxa. Thus choosing ANY ordering, we are unlikely to achieve much compression.
+(REQUIRES PROOF: i think you can do an easy one using th fact that sites are iid)
+
+Now, note that we have a well defined alternate an null hypothesis! We can look for saturation by measuring the 'compressibility' of a dataset, and checking whether it is substantially more compressed than one expects under saturation.
+
+In the following we'll implement this method.
+
+
+
+
+
+
+## Distribution of encoding length under saturation - equal probabilities
+
+Suppose that a random variable $X$ models vectors of length $k$ with elements taken from from an alphabet $L$ with $l < \infty$ letters in it. Suppose first that every letter has equal probability of occuring at each position in the vector. Let $Y = R(X)$ be the encoding length of $X$. We want to find the distribution of $Y$.
+
+First, consider the case $P(Y) = 1 = p_1$. This can only occur if every letter after the first matches that letter.
+In other words, $Y = 1$ if and only if we keep choosing the same letter!
+
+Now consider what we could change in this vector to increase the length of the encoding by 1. At some point, we would have to fail to choose the same letter (happens with probability $1 - \frac{1}{l} = \frac{l-1}{l})$, but then choose our new letter consistently after that. In other words, we'd have to switch which letter was part of the current run.
+
+Now we have a new persepctive, we can figure out the length of the encoding by figuring out how many times we 'switched' letters. Because we have a minimum encoding length of 1, the encoding length is 1 + number of switches.
+
+Thankfully the number of switches (call this $Z$) is very easy to model. Clearly $Z\tilde \ Binomial(k-1, \frac{l-1}{l})$, since there are $k-1$ places a switch could happen (it can't happen on the first element). Thus
+
+$$P(Y = m) = P(Z = m-1) = {k-1\choose m} (\frac{l-1}{l})^m(\frac{1}{l})^{k-1-m}  $$
+
+Which gives the full distribution. Since this is so close to the binomial distribution, we get all expectation and variance for free. For example. $E(Y) = E(Z) + 1 = k(\frac{l-1}{l}) + 1$
+
+## The case with unequal probabilities
+
+We can get there by the same idea, with some extra complications. Let $f_i$ be the probability that a given term in the sequence is letter $i$. Now, under the conditions of saturation, the identity of one base does not depend on the one that comes before it, and so $P(\text{ the nth base is i | the n-1 th base was j}) = P(\text{the nth base is i}) = f_i$. 
+
+Now, as with the last section, we'll count the encoding length by counting the number of switches. Once again, let $Y$ be the encoding length, and $Z = Y -1$ the number of switches. Now the probability of switching on one of the possible $k-1$ bases where a switch can occurr.
+
+$$ P(\text{switch}) = \sum_{i=1}^l P(\text{switch} | \text{base beforehand was } i)P(\text{last base was }i) $$
+
+Now, since the probability of drawing a base is constant, this is:
+
+$$ = \sum_{i=1}^l P(\text{switch | previous base was i})f_i = \sum_{i=1}^l P(\text{don't draw base i})f_i = \sum_{i=1}^l (1-f_i)f_i = \sum_{i=1}^l f_i - \sum_{i=1}^l f_i^2 = 1 - s  $$
+
+Where we have set $s = \sum_i f_i^2$ for ease of use. Similarly (or by complementarity) we have $P(\text{no switch}) = s$.
+
+Now we can apply the same logic as last time:
+
+$$ P(Y = m) = P(Z = m-1) = {k-1\choose m} (1 - s)^m(s)^{k-1-m}   $$
+
+And $E(Y) = 1 + k(1-s) $
+
+# Implementation
+
+To assess the compressibility of the data, one approach is to simply try all orderings of taxa in the alignment, compress each of them, and take the minimum across all orderings. However, the complexity of this grows as $k!$, and so is unacheivable for datasets of more than about 10 taxa. 
+
+Instead, our method will be to use the ordering that is implied by a tree inferred from the alignment. We'll calculate the mean encoding length of sites across the alignment, then compare this to what is expected under the null model.
+
+## Algorithm
+
+The first part is to ensure that our alignment is ordered correctly for us to calculate the RLEs. We need to take a given ordering of the trees, and reorder the alignment accordingly
+
+```{r,eval = FALSE}
+## Assume we start with a file unordered_aln  in DNAbin format.
+
+# Let tree order be a vector of tip names that corresponds to the ordering on the tree
+
+order_alignment <- function(unordered_aln, tree_order){
+  return(unordered_aln[tree_order])
+}
+
+```
+
+Now, we have to calculate the RLE of each site, and sum across sites to obtain the total RLE.
+
+
+```{r,eval = FALSE}
+#We begin with  aln, a DNAbin alignment that has the tree ordering on it. Then, we take each column of the alignment and calculate the RLE of it, storing all the RLEs in a vector.
+
+mat <- as.matrix(aln)
+sitewise_rle = apply(mat, FUN = rle, MARGIN = 2)
+
+
+# Now, we can sum across this vector to obtain the total RLE
+
+total_rle <- sum(sitewise_rle)
+mean_rle <- mean(sitewise_rle) # we assume that the mean RLE is an indicator of the 'true' rle (whatever that means).
+
+```
+
+Now, we have to calculate the probability of seeing such an RLE under the null hypothesis that saturation is occurring. 
+
+
+One approach is to calculate the probability directly from the distributions we have. We have to calculate the CDFs that relate to the PMFs given in the previous sections. Luckily, they're pretty much binomial, so we can use R's inbuilt binomial cdfs. We want to know $P(\text{an observed RLE this low under null model}) = 1 - \text{Binomial CDF(observed RLE)} $
+
+```{r,eval = FALSE}
+s <- sum(f**2)
+
+p <- 1 - pbinom(mean_rle, k, 1-s)
+```
+
+
+Another is to use the central limit theorem, and note the distance between observed mean and expected mean should be normally distributed (or $t$ distributed for small numbers of sites).
+
+```{r,eval = FALSE}
+# we first have to calulate s, the switch parameter in the above distribution. s = sum(f_i ^2), suppose we have the base frequencies in a vector f
+
+s <- sum(f**2)
+  
+  
+null_mean_rle <- (1-s)*k + 1
+t.test(sitewise_rle, mu=null_mean_rle)
+```
+
+
+
+## Warnings
+
+Invariant sites should be excluded from this analysis. A site that never changes will always have RLE 1, regardless of the informativeness of the dataset. Including these sites will skew the test towards telling you no saturation is occurring. 
+
+On a related note, this is a measure of data saturation, not of informativeness. It will not tell you if your data varies too little to contain phylogenetic information.
+
+Other possible issues: this relies on a fixed tree topology, and so it may not be an accurate depiction of what's going on when that tree has low support.
+
+## Notes on Saturation
+
+We should be cautious about how we use the word saturation in the above. We've defined it to mean a scenario in which every site-taxon's value is independent of every other site-taxon. But there are plenty of datasets that will not behave exactly in this way, but nevertheless do not have sufficient phylogenetic signal to infer a tree properly (as an obvious example, consider).
+
+Truthfully, the measure of 'saturation' that we use should probably depend on which node we are trying to resolve. Consider a tree with 4 taxa (A,B,C,D). If A,B are very closely related, and C,D very closely related, but the groups (A,B) and (C,D) are very distantly related (i.e. external branch lengths are short, but internal branch lengths are long), then we expect that the data is too saturated to resolve relationships near the node of (A,B), (C,D). Our metric will still see a twofold reduction in encoding length, and hence probably be significantly different.
+
+In the future, we might have to extend this metric to test saturation on specific branches. No ideas as of yet.

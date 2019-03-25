@@ -1,0 +1,227 @@
+---
+title: "for_david"
+author: "Nik"
+date: "14/03/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\section{A quick computation for multinomial entrop}
+
+We have to find a fast way to calculate the entropy H(X) = E(I(X)) for X a multinomial distribution. We will use 
+
+$$ H(X) = -\log n! - n \sum_{i=0}^k p_i \log(pi) + \sum_{i=0}^k \sum_{x_i=0}^n {n \choose x_i} p_i^{x_i}(1-p_i)^{n - x_i} \log x_i ! $$
+
+Which is $O((n+1)k)$. A more rapid version can be obtained by using Stirling's approximation, but it's not exact.
+
+```{r}
+### In the following, n is the sample size, p is the vector of probabilities of drawing each class, and p_i refers to the elements in the vector p. ####
+
+
+calc_term <- function(n, p_i){ # for a single p_i calculates the term inside the sum across each i (0...k) on the RHS. n is the length
+  
+
+  res = c()
+  for(i in seq(1,n,1)){
+    res[i] = choose(n,i)*p_i^(i)*((1-p_i)^(n -i))*log(factorial(i))
+  }
+  
+  #print(res)
+  
+  return(sum(res))
+  #check with scipy
+}
+
+multinomial_entropy <- function(n, p){ # n the number of lines in sequence, p a vector of probabilities for multinomial distribution
+  
+  term_3 = sum(sapply(p, FUN = calc_term, n = n))
+  calc <- -log(factorial(n)) - n*sum(p*log(p)) + term_3
+  
+  
+  return(calc)
+}
+```
+
+\section{Application}
+
+Now we want to apply this to a file of sequence data.
+
+The idea is that at each site we will calculate the information of that site, sum across all informations to obtain an estimate of the entropy $ \hat{H}$.
+
+Then we can compare $\hat{H}$ to $H*$, the entropy we expect under saturation.
+
+That means we first need to define a function for the information content of an observation. The information is given by:
+
+$$ I(X|X = x) = I(x) = - \log_2 (P(X = x))  $$
+
+```{r}
+### calculates the self-information of an observation x. In this case, x is the vector of counts of each nucleotide. p is the vector of probabilities of each draw.
+### p_i should be the overall frequency of each base i in the alignment 
+multinomial_info <- function(x, p){ 
+ P_x = dmultinom(x, prob = p)
+ 
+
+  return(- log(P_x))
+}
+```
+
+\subsection{Data Wrangling}
+
+We assume that the data is already in DNAbin format. This represents an alignment in matrix format, which makes it easy to do things sitewise. Here we will use an example dataset al. We also need the ape package running to load the dataset properly
+
+```{r}
+library(ape)
+```
+
+\subsection{Analysis}
+
+First we compute the base frequencies:
+
+```{r}
+mat <- as.character(al)
+
+table(mat)
+
+base_counts <- as.vector(table(mat))
+base_freqs <- base_counts / prod(dim(mat))
+base_freqs
+
+#We note the ordering on the frequencies is a, c, g, t
+```
+
+Now, letting n be the number of rows in al, we have the information necessary to generate the expected entropy under the null model:
+
+```{r}
+n <- dim(mat)[1]
+
+null_entropy <- multinomial_entropy(n, base_freqs) 
+null_entropy
+
+```
+
+Then generate a vector containing information for each site, and take the mean. To get the sitewise information, we only need the count of nucleotides across a given site.
+
+```{r}
+
+bases <- c("a", "c", "g", "t")
+
+#count how many times a base occurs
+
+
+smart_table <- function(x){
+  table(factor(x, levels = bases))
+}
+
+site_wise_counts <- apply(mat, 2, FUN = smart_table)
+print(site_wise_counts[0])
+
+
+site_wise_info <- apply(site_wise_counts, 2, multinomial_info, p = base_freqs)
+
+estimated_entropy <- sum(site_wise_info)/dim(mat)[2]
+
+print(estimated_entropy)
+
+```
+
+
+Formally, we've applied the central limit theorem: if k is the number of sites, $X_i$ the draw at each site, and k is large, then the sample mean of the information content $S_k = \frac{1}{k} \sum_{i=0}^k I(X_i)$ should converge in distribution to the normal distibution $N(H(X), \frac{\sigma^2}{k})$ where $\sigma^2 = \text{var}(X_i)$ is the variance of the information content.
+
+
+\section{P-values}
+
+There's a problem with just using the calculated index - it may be innacurate for small $n$. Thus, we will use a one-sample t-test to give us a probability of observing this amount of entropy under saturation, then use that p-value as our threshold value. 
+
+Note we don't actually have to explicitly calculate the variance, we can just estimate it from our sample. R's t.test will do this for us. 
+
+```{r}
+t.test(site_wise_info, mu = estimated_entropy, alternative = "less")
+```
+
+
+\section{One Function}
+
+This section just lumps everything in the previous bit into a single script:
+
+```{r}
+
+library(ape)
+
+calc_term <- function(n, p_i){ # for a single p_i calculates the term inside the sum across each i (0...k) on the RHS. n is the length
+  
+
+  res = c()
+  for(i in seq(1,n,1)){
+    res[i] = choose(n,i)*p_i^(i)*((1-p_i)^(n -i))*log(factorial(i))
+  }
+  
+  #print(res)
+  
+  return(sum(res))
+  #check with scipy
+}
+
+multinomial_entropy <- function(n, p){ # n the number of lines in sequence, p a vector of probabilities for multinomial distribution
+  
+  term_3 = sum(sapply(p, FUN = calc_term, n = n))
+  calc <- -log(factorial(n)) - n*sum(p*log(p)) + term_3
+  
+  
+  return(calc)
+}
+
+smart_table <- function(x){ #a modification of table to return 0 base counts when they occur (for example a: 0, t:1, c:0, g:100)
+  bases <- c("a", "c", "g", "t")
+  return(table(factor(x, levels = bases)))
+}
+
+
+calculate_sitewise_info <- function(mat, base_freqs){ #returns the sample mean of the information content across all sites.
+  site_wise_counts <- apply(mat, 2, FUN = smart_table)
+  print(site_wise_counts[0])
+
+
+  site_wise_info <- apply(site_wise_counts, 2, multinomial_info, p = base_freqs)
+  
+  return(site_wise_info)
+}
+
+calculate_estimated_entropy <- function(site_wise_info){
+  estimated_entropy <- sum(site_wise_info)/dim(mat)[2]
+  
+  return(estimated_entropy)
+  
+}
+
+calculate_index <- function(al, give_p = TRUE){ ### This is the only function you actually need to run, al should be a DNAbin object ###
+  mat <- as.character(al)
+  
+  base_counts <- as.vector(table(mat))
+  base_freqs <- base_counts / prod(dim(mat))
+  base_freqs #observed base frequencies #
+  
+  n <- dim(mat)[1] # the number of taxa# 
+  num_seqs <- dim(mat)[2] #number of sites#
+  
+  null_entropy <- multinomial_entropy(n, base_freqs)  #the entropy expected under saturation#
+  
+  site_wise_info <- calculate_sitewise_info(mat, base_freqs)
+  
+  estimated_entropy <- calculate_estimated_entropy(site_wise_info)
+  
+  if(give_p = TRUE){
+    return( t.test(site_wise_info, mu = null_entropy, alternative = "less") )
+  }  else{
+  return(c(null_entropy, estimated_entropy))
+  }
+}
+
+```
+
+Note the calculate index function can either give you the raw index (a tuple containing null entropy and the estimated entropy) or, if give_p = True, the results of a one sample t-test testing
+
+$$H_0\text{: entropy is that of a saturated model} \\ H_a:\text{: entropy not that of a saturated model} $$
+

@@ -1,0 +1,135 @@
+require(phangorn)
+
+load("testAlsHPC2/summary_stats_0718.Rdata")
+load("simScenarios.Rdata")
+
+phmat <- matrix(NA, 100, 1620)
+tlmat <- matrix(NA, 100, 1620)
+tentmat <- matrix(NA, 100, 1620)
+tcimat <- matrix(NA, 100, 1620)
+tcommat <- matrix(NA, 100, 1620)
+
+for(i in 1:1620){
+      for(j in 1:100){
+      	    if(class(allres[[i]][[j]]) == "try-error") next
+	    distry <- try(dist.topo(allres[[i]][[j]]$tree, allres[[i]][[j]]$trueTree))
+	    if(class(distry) != "try-error"){
+	    	phmat[j,i] <- distry
+	    	tlmat[j,i] <- (sum(allres[[i]][[j]]$tree$edge.length) - sum(allres[[i]][[j]]$trueTree$edge.length)) / sum(allres[[i]][[j]]$trueTree$edge.length)
+	    }
+	    tentmat[j,i] <- stats[[i]][[j]][3]
+	    tcimat[j,i] <- stats[[i]][[j]][4]
+	    tcommat[j,i] <- stats[[i]][[j]][6]
+	    
+      }
+}
+
+phmat[,1:540] <- phmat[,1:540] / max(phmat[,1:540], na.rm = T)
+phmat[,541:1080] <- phmat[,541:1080] / max(phmat[,541:1080], na.rm = T)
+phmat[,1081:1620] <- phmat[,1081:1620] / max(phmat[,1081:1620], na.rm = T)
+
+colnames(phmat) <- apply(scenarios, 1, function(x) paste0(x, collapse = "/"))
+colnames(tlmat) <- apply(scenarios, 1, function(x) paste0(x, collapse = "/"))
+colnames(tentmat) <- apply(scenarios, 1, function(x) paste0(x, collapse = "/"))
+colnames(tcimat) <- apply(scenarios, 1, function(x) paste0(x, collapse = "/"))
+colnames(tcommat) <- apply(scenarios, 1, function(x) paste0(x, collapse = "/"))
+
+scenord <- scenarios[order(factor(scenarios[,1], levels = c("8", "16", "32")), scenarios[,5], scenarios[,4], factor(scenarios[,7], levels = c("0.9", "0.5", "0.1")), factor(scenarios[,6], levels = c("JC", "GTR+G")), factor(scenarios[,2], levels = c("2500", "1500", "500"))),]
+
+phmatord <- phmat[,order(factor(scenarios[,1], levels = c("8", "16", "32")), scenarios[,5], scenarios[,4], factor(scenarios[,7], levels = c("0.9", "0.5", "0.1")), factor(scenarios[,6], levels = c("JC", "GTR+G")), factor(scenarios[,2], levels = c("2500", "1500", "500")))]
+
+tlmatord <- tlmat[,order(factor(scenarios[,1], levels = c("8", "16", "32")), scenarios[,5], scenarios[,4], factor(scenarios[,7], levels = c("0.9", "0.5", "0.1")), factor(scenarios[,6], levels = c("JC", "GTR+G")), factor(scenarios[,2], levels = c("2500", "1500", "500")))]
+
+tentmatord <- tentmat[,order(factor(scenarios[,1], levels = c("8", "16", "32")), scenarios[,5], scenarios[,4], factor(scenarios[,7], levels = c("0.9", "0.5", "0.1")), factor(scenarios[,6], levels = c("JC", "GTR+G")), factor(scenarios[,2], levels = c("2500", "1500", "500")))]
+
+tcimatord <- tcimat[,order(factor(scenarios[,1], levels = c("8", "16", "32")), scenarios[,5], scenarios[,4], factor(scenarios[,7], levels = c("0.9", "0.5", "0.1")), factor(scenarios[,6], levels = c("JC", "GTR+G")), factor(scenarios[,2], levels = c("2500", "1500", "500")))]
+
+tcommatord <- tcommat[,order(factor(scenarios[,1], levels = c("8", "16", "32")), scenarios[,5], scenarios[,4], factor(scenarios[,7], levels = c("0.9", "0.5", "0.1")), factor(scenarios[,6], levels = c("JC", "GTR+G")), factor(scenarios[,2], levels = c("2500", "1500", "500")))]
+
+scensplit <- strsplit(colnames(phmatord), split = "/")
+scenord <- matrix(NA, 1620, 7)
+for(i in 1:1620) scenord[i,] <- scensplit[[i]]
+colnames(scenord) <- c("Ntax", "seqlen", "imbal", "trlen", "randsites", "model", "stemmy")
+
+ind8 <- which(scenord[,1] == "8")
+ind16 <- which(scenord[,1] == "16")
+ind32 <- which(scenord[,1] == "32")
+ind8nor <- which(scenord[,1] == "8" & scenord[,5] == "0")
+ind16nor <- which(scenord[,1] == "16" & scenord[,5] == "0")
+ind32nor <- which(scenord[,1] == "32" & scenord[,5] == "0")
+ind8r <- which(scenord[,1] == "8" & scenord[,5] == "0.8")
+ind16r <- which(scenord[,1] == "16" & scenord[,5] == "0.8")
+ind32r <- which(scenord[,1] == "32" & scenord[,5] == "0.8")
+#ind8norcut <- which(scenord[ind8nor,4] == "0.25" | scenord[ind8nor,4] == "0.45" | scenord[ind8nor,4] == "0.65")
+#ind16norcut <- which(scenord[ind16nor,4] == "0.25" | scenord[ind16nor,4] == "0.45" | scenord[ind16nor,4] == "0.65")
+#ind32norcut <- which(scenord[ind32nor,4] == "0.25" | scenord[ind32nor,4] == "0.45" | scenord[ind32nor,4] == "0.65")
+#ind8norcut2 <- which(scenord[ind8nor,4] == "0.001" | scenord[ind8nor,4] == "0.05" | scenord[ind8nor,4] == "0.25")
+#ind16norcut2 <- which(scenord[ind16nor,4] == "0.001" | scenord[ind16nor,4] == "0.05" | scenord[ind16nor,4] == "0.25")
+#ind32norcut2 <- which(scenord[ind32nor,4] == "0.001" | scenord[ind32nor,4] == "0.05" | scenord[ind32nor,4] == "0.25")
+
+ind8norcut <- which(scenord[ind8nor,4] == "0.001" | scenord[ind8nor,4] == "0.05")
+ind16norcut <- which(scenord[ind16nor,4] == "0.001" | scenord[ind16nor,4] == "0.05")
+ind32norcut <- which(scenord[ind32nor,4] == "0.001" | scenord[ind32nor,4] == "0.05")
+ind8norcut2 <- which(scenord[ind8nor,4] == "0.25" | scenord[ind8nor,4] == "0.45" | scenord[ind8nor,4] == "0.65")
+ind16norcut2 <- which(scenord[ind16nor,4] == "0.25" | scenord[ind16nor,4] == "0.45" | scenord[ind16nor,4] == "0.65")
+ind32norcut2 <- which(scenord[ind32nor,4] == "0.25" | scenord[ind32nor,4] == "0.45" | scenord[ind32nor,4] == "0.65")
+
+dats <- list(phmatord, tlmatord, tentmatord, tcimatord, tcommatord)
+names(dats) <- c("phmatord", "tlmatord", "tentmatord", "tcimatord", "tcommatord")
+subdats <- list()
+
+subdats$all16seq500 <- lapply(dats, function(x) x[,ind8][,c(F,F,F,F,T,T)])
+subdats$all32seq500 <- lapply(dats, function(x) x[,ind16][,c(F,F,F,F,T,T)])
+subdats$all64seq500 <- lapply(dats, function(x) x[,ind32][,c(F,F,F,F,T,T)])
+subdats$all16seq1500 <- lapply(dats, function(x) x[,ind8][,c(F,F,T,T,F,F)])
+subdats$all32seq1500 <- lapply(dats, function(x) x[,ind16][,c(F,F,T,T,F,F)])
+subdats$all64seq1500 <- lapply(dats, function(x) x[,ind32][,c(F,F,T,T,F,F)])
+subdats$all16seq2500 <- lapply(dats, function(x) x[,ind8][,c(T,T,F,F,F,F)])
+subdats$all32seq2500 <- lapply(dats, function(x) x[,ind16][,c(T,T,F,F,F,F)])
+subdats$all64seq2500 <- lapply(dats, function(x) x[,ind32][,c(T,T,F,F,F,F)])
+subdats$norand16seq500 <- lapply(dats, function(x) x[,ind8nor][,c(F,F,F,F,T,T)])
+subdats$norand32seq500 <- lapply(dats, function(x) x[,ind16nor][,c(F,F,F,F,T,T)])
+subdats$norand64seq500 <- lapply(dats, function(x) x[,ind32nor][,c(F,F,F,F,T,T)])
+subdats$norand16seq1500 <- lapply(dats, function(x) x[,ind8nor][,c(F,F,T,T,F,F)])
+subdats$norand32seq1500 <- lapply(dats, function(x) x[,ind16nor][,c(F,F,T,T,F,F)])
+subdats$norand64seq1500 <- lapply(dats, function(x) x[,ind32nor][,c(F,F,T,T,F,F)])
+subdats$norand16seq2500 <- lapply(dats, function(x) x[,ind8nor][,c(T,T,F,F,F,F)])
+subdats$norand32seq2500 <- lapply(dats, function(x) x[,ind16nor][,c(T,T,F,F,F,F)])
+subdats$norand64seq2500 <- lapply(dats, function(x) x[,ind32nor][,c(T,T,F,F,F,F)])
+subdats$rand16seq500 <- lapply(dats, function(x) x[,ind8r][,c(F,F,F,F,T,T)])
+subdats$rand32seq500 <- lapply(dats, function(x) x[,ind16r][,c(F,F,F,F,T,T)])
+subdats$rand64seq500 <- lapply(dats, function(x) x[,ind32r][,c(F,F,F,F,T,T)])
+subdats$rand16seq1500 <- lapply(dats, function(x) x[,ind8r][,c(F,F,T,T,F,F)])
+subdats$rand32seq1500 <- lapply(dats, function(x) x[,ind16r][,c(F,F,T,T,F,F)])
+subdats$rand64seq1500 <- lapply(dats, function(x) x[,ind32r][,c(F,F,T,T,F,F)])
+subdats$rand16seq2500 <- lapply(dats, function(x) x[,ind8r][,c(T,T,F,F,F,F)])
+subdats$rand32seq2500 <- lapply(dats, function(x) x[,ind16r][,c(T,T,F,F,F,F)])
+subdats$rand64seq2500 <- lapply(dats, function(x) x[,ind32r][,c(T,T,F,F,F,F)])
+subdats$norandlong16seq500 <- lapply(dats, function(x) x[,ind8nor][,ind8norcut][,c(F,F,F,F,T,T)])
+subdats$norandlong32seq500 <- lapply(dats, function(x) x[,ind16nor][,ind16norcut][,c(F,F,F,F,T,T)])
+subdats$norandlong64seq500 <- lapply(dats, function(x) x[,ind32nor][,ind32norcut][,c(F,F,F,F,T,T)])
+subdats$norandlong16seq1500 <- lapply(dats, function(x) x[,ind8nor][,ind8norcut][,c(F,F,T,T,F,F)])
+subdats$norandlong32seq1500 <- lapply(dats, function(x) x[,ind16nor][,ind16norcut][,c(F,F,T,T,F,F)])
+subdats$norandlong64seq1500 <- lapply(dats, function(x) x[,ind32nor][,ind32norcut][,c(F,F,T,T,F,F)])
+subdats$norandlong16seq2500 <- lapply(dats, function(x) x[,ind8nor][,ind8norcut][,c(T,T,F,F,F,F)])
+subdats$norandlong32seq2500 <- lapply(dats, function(x) x[,ind16nor][,ind16norcut][,c(T,T,F,F,F,F)])
+subdats$norandlong64seq2500 <- lapply(dats, function(x) x[,ind32nor][,ind32norcut][,c(T,T,F,F,F,F)])
+subdats$norandshort16seq500 <- lapply(dats, function(x) x[,ind8nor][,ind8norcut2][,c(F,F,F,F,T,T)])
+subdats$norandshort32seq500 <- lapply(dats, function(x) x[,ind16nor][,ind16norcut2][,c(F,F,F,F,T,T)])
+subdats$norandshort64seq500 <- lapply(dats, function(x) x[,ind32nor][,ind32norcut2][,c(F,F,F,F,T,T)])
+subdats$norandshort16seq1500 <- lapply(dats, function(x) x[,ind8nor][,ind8norcut2][,c(F,F,T,T,F,F)])
+subdats$norandshort32seq1500 <- lapply(dats, function(x) x[,ind16nor][,ind16norcut2][,c(F,F,T,T,F,F)])
+subdats$norandshort64seq1500 <- lapply(dats, function(x) x[,ind32nor][,ind32norcut2][,c(F,F,T,T,F,F)])
+subdats$norandshort16seq2500 <- lapply(dats, function(x) x[,ind8nor][,ind8norcut2][,c(T,T,F,F,F,F)])
+subdats$norandshort32seq2500 <- lapply(dats, function(x) x[,ind16nor][,ind16norcut2][,c(T,T,F,F,F,F)])
+subdats$norandshort64seq2500 <- lapply(dats, function(x) x[,ind32nor][,ind32norcut2][,c(T,T,F,F,F,F)])
+
+save(ind8, ind16, ind32, ind8nor, ind16nor, ind32nor, ind8r, ind16r, ind32r, ind8norcut, ind16norcut, ind32norcut, ind8norcut2, ind16norcut2, ind32norcut2, scenord, phmatord, tlmatord, tentmatord, tcimatord, tcommatord, dats, subdats, file = "summary_matrices_0718.Rdata")
+
+par(mfrow = c(5, 1))
+boxplot(tlmatord[,(73:180)+1080], range = 0)
+abline(0, 0)
+boxplot(phmatord[,(73:180)+1080], range = 0)
+boxplot(tentmatord[,(73:180)+1080], range = 0)
+boxplot(tcimatord[,(73:180)+1080], range = 0)
+boxplot(tcommatord[,(73:180)+1080], range = 0)

@@ -1,0 +1,226 @@
+#load("thres.all.mat.0618.Rdata")
+
+par(mfrow = c(3, 3))
+
+# Plot "final" thresholds
+
+#plot(allthresmat[,1], allthresmat[,3], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(entropy ~ a * seqlen^b), data=as.data.frame(allthresmat[c(1,4,7),c(1,3)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(entropy ~ a * seqlen^b), data=as.data.frame(allthresmat[c(2,5,8),c(1,3)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(entropy ~ a * seqlen^b), data=as.data.frame(allthresmat[c(3,6,9),c(1,3)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 3)
+
+#plot(allthresmat[,1], allthresmat[,4], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(consindex ~ a * seqlen^b), data=as.data.frame(allthresmat[c(1,4,7),c(1,4)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(consindex ~ a * seqlen^b), data=as.data.frame(allthresmat[c(2,5,8),c(1,4)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(consindex ~ a * seqlen^b), data=as.data.frame(allthresmat[c(3,6,9),c(1,4)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 3)
+
+#plot(allthresmat[,1], allthresmat[,5], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(compress ~ a * seqlen^b), data=as.data.frame(allthresmat[c(1,4,7),c(1,5)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(compress ~ a * seqlen^b), data=as.data.frame(allthresmat[c(2,5,8),c(1,5)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(compress ~ a * seqlen^b), data=as.data.frame(allthresmat[c(3,6,9),c(1,5)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 3)
+
+# Plot thresholds at q0.05
+
+plot(thrmattopo[1:9,1], thrmattopo[1:9,6], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(q0.05ent ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(1,4,7),c(1,6)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(q0.05ent ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(2,5,8),c(1,6)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(q0.05ent ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(3,6,9),c(1,6)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 3)
+
+plot(thrmattopo[1:9,1], thrmattopo[1:9,9], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(q0.05ci ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(1,4,7),c(1,9)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(q0.05ci ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(2,5,8),c(1,9)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(q0.05ci ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(3,6,9),c(1,9)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 3)
+
+plot(thrmattopo[1:9,1], thrmattopo[1:9,12], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(q0.05com ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(1,4,7),c(1,12)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(q0.05com ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(2,5,8),c(1,12)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(q0.05com ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(3,6,9),c(1,12)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 3)
+
+
+# Plot best thresholds
+
+plot(thrmattopo[1:9,1], thrmattopo[1:9,3], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(entth ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(1,4,7),c(1,3)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(entth ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(2,5,8),c(1,3)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(entth ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(3,6,9),c(1,3)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 3)
+
+plot(thrmattopo[1:9,1], thrmattopo[1:9,4], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(cith ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(1,4,7),c(1,4)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(cith ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(2,5,8),c(1,4)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(cith ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(3,6,9),c(1,4)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 3)
+
+plot(thrmattopo[1:9,1], thrmattopo[1:9,5], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(comth ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(1,4,7),c(1,5)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(comth ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(2,5,8),c(1,5)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(comth ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(3,6,9),c(1,5)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 3)
+
+# Plot slow rate thresholds
+
+#plot(thrmattopo[28:36,1], thrmattopo[28:36,6], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(q0.05ent ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(28,31,34),c(1,6)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(q0.05ent ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(29,32,35),c(1,6)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(q0.05ent ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(30,33,36),c(1,6)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 3)
+
+#plot(thrmattopo[28:36,1], thrmattopo[28:36,9], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(q0.05ci ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(28,31,34),c(1,9)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(q0.05ci ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(29,32,35),c(1,9)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(q0.05ci ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(30,33,36),c(1,9)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 3)
+
+#plot(thrmattopo[28:36,1], thrmattopo[28:36,12], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(q0.05com ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(28,31,34),c(1,12)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(q0.05com ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(29,32,35),c(1,12)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(q0.05com ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(30,33,36),c(1,12)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+#curve(a.est * x^b.est , add=T, col = 3)
+
+
+# Plot fast rate thresholds
+
+plot(thrmattopo[37:45,1], thrmattopo[37:45,6], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(q0.05ent ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(37,40,43),c(1,6)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(q0.05ent ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(38,41,44),c(1,6)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(q0.05ent ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(39,42,45),c(1,6)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 3)
+
+plot(thrmattopo[37:45,1], thrmattopo[37:45,9], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(q0.05ci ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(37,40,43),c(1,9)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(q0.05ci ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(38,41,44),c(1,9)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(q0.05ci ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(39,42,45),c(1,9)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 3)
+
+plot(thrmattopo[37:45,1], thrmattopo[37:45,12], col = c(1,2,3,1,2,3,1,2,3), pch = 19)
+nl.fit <- nls(formula=(q0.05com ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(37,40,43),c(1,12)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 1)
+nl.fit <- nls(formula=(q0.05com ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(38,41,44),c(1,12)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 2)
+nl.fit <- nls(formula=(q0.05com ~ a * seqlen^b), data=as.data.frame(thrmattopo[c(39,42,45),c(1,12)]), start = c(a=1, b=0.5))
+a.est <- coef(nl.fit)[1]
+b.est <- coef(nl.fit)[2]
+curve(a.est * x^b.est , add=T, col = 3)
+

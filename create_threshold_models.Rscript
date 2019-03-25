@@ -1,0 +1,26 @@
+load('thresholds_fixed_090718.Rdata')
+
+shorter <- as.data.frame(targthreshs2$worst.midlentrs)
+longer <- as.data.frame(targthreshs2$worst.longishtrs)
+
+th1entlin <- lm(entth ~ seqlen + ntax, data = shorter)
+th2entlin <- lm(entth ~ seqlen + ntax, data = longer)
+th1entsqrt <- lm(entth ~ I(seqlen^0.5) + I(ntax^0.5), data = shorter)
+th2entsqrt <- lm(entth ~ I(seqlen^0.5) + I(ntax^0.5), data = longer)
+
+th1cilin <- lm(cith ~ seqlen + ntax, data = shorter)
+th2cilin <- lm(cith ~ seqlen + ntax, data = longer)
+th1cisqrt <- lm(cith ~ I(seqlen^0.5) + I(ntax^0.5), data = shorter)
+th2cisqrt <- lm(cith ~ I(seqlen^0.5) + I(ntax^0.5), data = longer)
+
+th1comlin <- lm(comth ~ seqlen + ntax, data = shorter)
+th2comlin <- lm(comth ~ seqlen + ntax, data = longer)
+th1comsqrt <- lm(comth ~ I(seqlen^0.5) + I(ntax^0.5), data = shorter)
+th2comsqrt <- lm(comth ~ I(seqlen^0.5) + I(ntax^0.5), data = longer)
+
+getSatThreshold <- function(seqlen, ntax, fun){
+	resthres <- predict(fun, newdata = data.frame(seqlen = seqlen, ntax = ntax))
+	return(resthres)
+}
+
+save(th1entlin, th2entlin, th1entsqrt, th2entsqrt, th1cilin, th2cilin, th1cisqrt, th2cisqrt, th1comlin, th2comlin, th1comsqrt, th2comsqrt, file = "threshold.functions.Rdata")

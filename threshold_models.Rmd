@@ -1,0 +1,79 @@
+---
+title: "Threshold Models"
+author: "Nik"
+date: "31 July 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load data}
+load('thresholds_fixed_090718.Rdata')
+```
+
+# Exclusively Linear Models
+
+In this first section, we will do the simplest thing and just run things with linear models. The fit is pretty good.
+
+```{r}
+shorter <- as.data.frame(targthreshs2$worst.midlentrs)
+longer <- as.data.frame(targthreshs2$worst.longishtrs)
+library(scatterplot3d)
+library(rgl)
+```
+
+## Shorter trees
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+short.plot <- scatterplot3d(shorter$seqlen, shorter$ntax, shorter$entth, type = 'h', angle = 55, pch = 16)
+short.lm <- lm(shorter$entth ~ shorter$seqlen + shorter$ntax) #fit a model
+short.plot$plane3d(short.lm)
+```
+
+The model is given by:
+
+```{r}
+summary(short.lm)
+```
+
+## Longer trees
+
+```{r}
+long.plot <- scatterplot3d(longer$seqlen, longer$ntax, longer$entth, type = 'h', angle = 75, pch = 16)
+long.lm <- lm(longer$entth ~ longer$seqlen + longer$ntax) #fit a model
+long.plot$plane3d(long.lm)
+```
+
+The model:
+
+```{r}
+summary(long.lm)
+```
+
+
+# Half Power Models
+
+Same as above, but this time we allow our model to look like
+
+$$ y  = ax^{1/2} + bz^{1/2} + \epsilon $$
+## Shorter Trees
+
+```{r}
+half.short.model <- lm(shorter$entth ~ I(shorter$seqlen^0.5) + I(shorter$ntax^0.5))
+summary(half.short.model)
+```
+
+
+
+
+## Longer Trees
+
+```{r}
+half.long.model <- lm(longer$entth ~ I(longer$seqlen^0.5) + I(longer$ntax^0.5)) 
+summary(half.long.model)
+```

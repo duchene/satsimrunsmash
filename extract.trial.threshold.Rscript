@@ -1,0 +1,23 @@
+library(phangorn)
+load("summary_matrices_0618.Rdata")
+
+thrscen <- list(c(97:108, 637:648, 1177:1188), c(109:120, 649:660, 1189:1200), c(133:144, 673:684, 1213:1224))
+targthreshs <- list(matrix(NA,9,5), matrix(NA,9,5), matrix(NA,9,5))
+targthreshs <- lapply(targthreshs, function(x){
+	    x[,1] <- c(500, 1500, 2500)
+	    x[,2] <- c(16, 16, 16, 32, 32, 32, 64, 64, 64)
+	    colnames(x) <- c("seqlen", "ntax", "entth", "cith", "comth")
+	    return(x)
+	    }
+)
+names(targthreshs) <- c("worst.midlentrs", "best.longtrs", "best.longtrssumn")
+schemeind <- list(c(5,6,11,12), c(3,4,9,10), c(1,2,7,8), c(17,18,23,24), c(15,16,21,22), c(13,14,19,20), c(29,30,35,36), c(27,28,33,34), c(25,26,31,32))
+
+for(j in 1:length(targthreshs)){
+      dat <- lapply(dats[c("tentmatord", "tcimatord", "tcommatord")], function(x) x[,thrscen[[j]]])
+      for(i in 1:9){
+      	    targthreshs[[j]][i,c(3,4,5)] <- sapply(dat, function(x) min(as.numeric(x[,schemeind[[i]]]), na.rm = T))
+      }
+}
+
+targthreshs <- lapply(targthreshs, abs)

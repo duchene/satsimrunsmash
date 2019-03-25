@@ -1,0 +1,43 @@
+for(i in 1:100){
+
+filetorun <- paste0("
+library(phangorn)
+
+curdir <- getwd()
+setwd('..')
+source('runPhyML.R')
+source('get.ci.test.R')
+source('get.compression.R')
+source('saturation.index.R')
+load('trees.Rdata')
+source('satsimcont.R')
+load('simScenarios.Rdata')
+setwd(curdir)
+
+res <- list()
+
+for(j in 1:1000){
+      res[[j]] <- try(satsimcont(ntaxa = c(8,16,32), imbal = c(T, F), trlen = c(0.001, 0.65), stemminess = c(0.1, 0.9), seqlen = c(250, 2500), modelsim = c('JC', 'GTR+G'), modelest = 'JC'))
+      
+      save(res, file = 'results.", i, ".Rdata')
+}
+")
+
+writeLines(filetorun, con = paste0("scen", i, ".Rscript"))
+
+shfile <- paste0("#!/bin/bash
+#PBS -P RDS-FSC-Phylogenomics-RW
+#PBS -l select=1:ncpus=1:mem=16GB
+#PBS -l walltime=24:00:00
+#PBS -q defaultQ
+cd $PBS_O_WORKDIR
+module load phyml
+module load R/3.2.2
+R --vanilla < scen", i, ".Rscript
+")
+
+writeLines(shfile, con = paste0("scen", i, ".sh"))
+
+system(paste0("qsub scen", i, ".sh"))
+
+}

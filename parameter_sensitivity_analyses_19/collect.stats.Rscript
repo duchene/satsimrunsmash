@@ -1,0 +1,43 @@
+require(phangorn)
+source("../get.compression.R")
+source("../get.ci.test.R")
+
+load("results.9.Rdata")
+allres <- res
+load("results.8.Rdata")
+allres[1261:1440] <- res[1261:1440]
+load("results.7.Rdata")
+allres[1081:1260] <- res[1081:1260]
+load("results.6.Rdata")
+allres[901:1080] <- res[901:1080]
+load("results.5.Rdata")
+allres[721:900] <- res[721:900]
+load("results.4.Rdata")
+allres[541:720] <- res[541:720]
+load("results.3.Rdata")
+allres[361:540] <- res[361:540]
+load("results.2.Rdata")
+allres[181:360] <- res[181:360]
+load("results.1.Rdata")
+allres[1:180] <- res[1:180]
+
+stats <- list()
+
+for(i in 1:1620){     
+      stats[[i]] <- list()
+      for(j in 1:100){
+      	    if(class(allres[[i]][[j]]) == "try-error") next
+      	    stats[[i]][[j]] <- vector()
+	    stats[[i]][[j]]["estEntr"] <- if(is.null(unlist(allres[[i]][[j]]$estEntr))) NA else unlist(allres[[i]][[j]]$estEntr)
+	    stats[[i]][[j]]["expEntr"] <- if(is.null(unlist(allres[[i]][[j]]$expEntr))) NA else unlist(allres[[i]][[j]]$expEntr)
+	    stats[[i]][[j]]["tEntr"] <- if(is.null(unlist(allres[[i]][[j]]$tEntr))) NA else unlist(allres[[i]][[j]]$tEntr)
+	    stats[[i]][[j]]["cit"] <- if(is.null(unlist(allres[[i]][[j]]$cit))) NA else unlist(allres[[i]][[j]]$cit)
+	    stats[[i]][[j]]["cip"] <- if(is.null(unlist(allres[[i]][[j]]$cip))) NA else unlist(allres[[i]][[j]]$cip)
+	    stats[[i]][[j]]["tCompress"] <- if(is.null(unlist(allres[[i]][[j]]$tCompress))) NA else unlist(allres[[i]][[j]]$tCompress)
+	    stats[[i]][[j]]["pCompress"] <- if(is.null(unlist(allres[[i]][[j]]$pCompress))) NA else unlist(allres[[i]][[j]]$pCompress)
+	    
+      }
+      print(i)
+}
+
+save(allres, stats, file = "summary_stats_0718.Rdata")
